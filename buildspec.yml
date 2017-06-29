@@ -2,29 +2,22 @@ version: 0.1
 
 environment_variables:
   plaintext:
-    key: "value"
-    key: "value"
+    IMAGE_REPO_NAME: "jquerywebide_terminal"
+    IMAGE_TAG: "20170629"
 
 phases:
-  install:
-    commands:
-      - command
-      - command
   pre_build:
     commands:
-      - command
-      - command
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login --region $AWS_DEFAULT_REGION)
   build:
     commands:
-      - command
-      - command
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker-compose build
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
   post_build:
     commands:
-      - command
-      - command
-artifacts:
-  files:
-    - location
-    - location
-  discard-paths: yes
-  base-directory: location
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
