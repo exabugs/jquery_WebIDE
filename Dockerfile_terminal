@@ -1,0 +1,24 @@
+# @see
+# http://postd.cc/lessons-building-node-app-docker/
+
+FROM bitnami/node:7.10.0-r1
+
+RUN useradd --user-group --create-home --shell /bin/false app
+
+ENV HOME=/home/app
+ENV WORKDIR=$HOME/terminal
+
+USER root
+COPY package.json $WORKDIR/
+RUN chown -R app:app $HOME/*
+
+USER app
+WORKDIR $WORKDIR
+RUN npm install
+
+USER root
+COPY . $WORKDIR
+RUN chown -R app:app $HOME/*
+
+USER app
+CMD ["node", "src/terminal.js"]

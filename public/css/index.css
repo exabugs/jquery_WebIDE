@@ -1,0 +1,145 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100%;
+    width: 100%;
+    font: 13px Helvetica, Arial;
+}
+
+#menu {
+    background: #000;
+    padding: 3px;
+}
+
+#menu input {
+    border: 0;
+    padding: 10px;
+    width: 100%;
+    margin-right: .5%;
+}
+
+#menu button {
+    width: 90px;
+    background: rgb(130, 224, 255);
+    border: none;
+    padding: 10px;
+}
+
+.tab-pane {
+    position: absolute;
+    overflow: auto;
+
+    top: 36px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    border: solid thin #007fff;
+}
+
+.messages {
+
+    overflow: auto;
+}
+
+.messages li {
+    padding: 5px 10px;
+    width: 100%;
+}
+
+.messages li.command {
+    background: #eee;
+}
+
+div.ui-layout-pane {
+    padding: 0;
+}
+
+/*CSS only for scrollable tabs*/
+.stMainWrapper ul.ui-tabs-nav {
+    position: relative;
+    overflow: hidden;
+}
+
+.stMainWrapper ul.ui-tabs-nav li {
+    position: absolute;
+    top: 3px; /*do not set 'left' should be done in the plugin after some calculations*/
+}
+
+.stMainWrapper ul.ui-tabs-nav li.stHasCloseBtn a {
+    padding-right: 5px;
+}
+
+.stMainWrapper ul.ui-tabs-nav li.stFirstTab {
+    margin-right: 3px;
+}
+
+.stMainWrapper ul.ui-tabs-nav li span.stCloseBtn {
+    float: left;
+    margin-top: 6px;
+    margin-right: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+.stNavMain {
+    list-style: none;
+    margin: 0 !important;
+    padding: 0 1px 0 1px !important;
+    position: relative;
+    border: none !important;
+    width: 100%;
+}
+
+.stNavMain li {
+    position: absolute;
+    width: 16px;
+    border-top: none !important;
+    border-bottom: none !important;
+    cursor: pointer;
+    margin-top: -1px;
+}
+
+.stNavMain li .ui-icon {
+    margin-top: 38%;
+}
+
+.stNavMain li.stNavNextArrow,
+.stNavMain li.stNavLastArrow {
+    border-right: none !important;
+    right: 1px;
+}
+
+.stNavMain li.stNavPrevArrow,
+.stNavMain li.stNavFirstArrow {
+    border-left: none !important;
+}
+
+/******
+ Editor
+ https://codemirror.net/demo/marker.html#
+*******/
+
+.breakpoints {
+    width: 1em;
+}
+
+.breakpoint {
+    color: #822;
+}
+
+.breakpoint-bg {
+    background: #ffe4e1;
+}
+
+.currentDebugLine {
+    background: #ffa07a;
+}
+
+.jstree-contextmenu {
+    z-index: 100;
+}

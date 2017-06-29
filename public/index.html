@@ -1,0 +1,482 @@
+<!doctype html>
+
+<!--
+HTML ターミナル エミュレータ : https://github.com/zeit/hyper
+-->
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Socket.IO chat</title>
+        <link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/jquery-ui.theme.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/codemirror.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout-default-latest.css" />
+        <link rel="stylesheet" type="text/css" href="css/jstree.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+
+        <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+        <script type="text/javascript" src="js/codemirror.js"></script>
+        <script type="text/javascript" src="js/jquery-ui-latest.js"></script>
+        <script type="text/javascript" src="js/jquery.layout-latest.js"></script>
+        <script type="text/javascript" src="js/jstree.js"></script>
+        <script type="text/javascript" src="js/underscore.js"></script>
+        <script type="text/javascript" src="js/moment.min.js"></script>
+
+        <script type="text/javascript" src="js/editor.js"></script>
+
+        <!--https://github.com/dvorkaman/jQuery-UI-Scrollable-Tabs-2.0/blob/master/js/jquery.scrollabletab.js-->
+        <script type="text/javascript" src="js/jquery.scrollabletab.js"></script>
+        <script type="text/javascript" src="js/jquery.init.js"></script>
+
+        <script src="mode/clike.js"></script>
+        <script src="mode/xml.js"></script>
+        <script src="mode/javascript.js"></script>
+        <script src="mode/css.js"></script>
+        <script src="mode/markdown.js"></script>
+
+        <script src="/socket.io/socket.io.js"></script>
+
+
+    </head>
+    <body>
+
+
+        <div class="ui-layout-north">
+            <form id="menu" action="">
+                <table>
+                    <tr>
+                        <td style="width: 100%;">
+                            <input id="m" autocomplete="off" />
+                        </td>
+                        <td>
+                            <button class="ui-button ui-widget ui-corner-all">Send</button>
+                        </td>
+                        <td>
+                            <button class="ui-button ui-widget ui-corner-all" id="cmd_step">Step</button>
+                        </td>
+                        <td>
+                            <button class="ui-button ui-widget ui-corner-all" id="cmd_cont">Cont</button>
+                        </td>
+                        <td>
+                            <button class="ui-button ui-widget ui-corner-all" id="cmd_run"> ></button>
+                        </td>
+                        <td>
+                            <button class="ui-button ui-widget ui-corner-all" id="cmd_stop">■</button>
+                        </td>
+                        <td>
+                            <button class="ui-button ui-widget ui-corner-all" id="cmd_compile">compile</button>
+                        </td>
+                        <td>
+                            <button class="ui-button ui-widget ui-corner-all" id="cmd_refresh">refresh</button>
+                        </td>
+                        <td>
+                            <button class="ui-button ui-widget ui-corner-all" id="btnReset"
+                                    onclick="myLayout.loadState(stateResetSettings, true)">Reset
+                            </button>
+
+                        </td>
+                    </tr>
+                </table>
+            </form>
+
+        </div>
+
+        <div id="tabs_west" class="ui-layout-west">
+            <ul class="droppable_tab">
+                <li><a href="#tab_west2"><span>Structure</span></a></li>
+                <li class="draggable_tab"><a href="#tabpane_threads"><span>Threads</span></a></li>
+            </ul>
+            <div>
+                <div id="tab_west2">
+                    <div class="tab-pane">
+                        <div id="testTree"></div>
+                    </div>
+                </div>
+                <div id="tabpane_threads">
+                    <div class="tab-pane">
+                        <ul id="threads" class="messages"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="tabs_east" class="ui-layout-east">
+            <ul class="droppable_tab">
+                <li><a href="#tab_east1"><span>Stack</span></a></li>
+                <li><a href="#tab_east2"><span>Variables</span></a></li>
+            </ul>
+            <div>
+                <div id="tab_east1">
+                    <div class="tab-pane">
+                        <ul id="stack" class="messages"></ul>
+                    </div>
+                </div>
+                <div id="tab_east2">
+                    <div class="tab-pane">
+                        <ul id="variables" class="messages"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tabs_center" class="ui-layout-center">
+            <ul class="droppable_tab" id="tab_center_title_div">
+                <li><a href="#tab_center_1"><span>NoName</span></a></li>
+            </ul>
+            <div id="tab_center_content_div">
+                <div id="tab_center_1">
+                    <div class="tab-pane">
+                        <textarea id="code"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tabs_south" class="ui-layout-south">
+            <ul class="droppable_tab">
+                <li><a href="#tab_south1"><span>Terminal 1</span></a></li>
+                <li><a href="#tab_south2"><span>Terminal 2</span></a></li>
+            </ul>
+            <div>
+                <div id="tab_south1">
+                    <ul id="messages" class="tab-pane messages"></ul>
+                </div>
+                <div id="tab_south2">
+                    <ul id="messages2" class="tab-pane messages"></ul>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+
+          var stateResetSettings = {
+            north__resizable: false,	// OVERRIDE the pane-default of 'resizable=true'
+            north__size: 45,
+            west__size: 260,
+            east__size: 260,
+            south__size: 200,
+            stateManagement__enabled: true // automatic cookie load & save enabled by default
+          };
+
+          var myLayout;
+
+          var editors = {};
+
+          $(document).ready(function() {
+
+            $("#tabs_center").tabs().scrollabletabs()
+              .on('tabsremove', function(event, ui) {
+                // todo: Save
+                editors = _.reject(editors, function(editor) {
+                  editor.hash === ui.tab.hash;
+                });
+              });
+            $("#tabs_east").tabs().scrollabletabs();
+            $("#tabs_south").tabs().scrollabletabs();
+            $("#tabs_west").tabs().scrollabletabs();
+
+            $("#testTree").jstree({
+              'core': {
+                "check_callback": true,
+                'data': []
+              },
+              "types": {
+//                "#": {
+//                  "max_children": 1,
+//                  "max_depth": 4,
+//                  "valid_children": ["root"]
+//                },
+                "default": {
+                  "valid_children": ["default", "file"]
+                },
+                "file": {
+                  "icon": "jstree-file",
+                  "valid_children": []
+                }
+              },
+              'sort': function(a, b) {
+                a = this.get_node(a);
+                b = this.get_node(b);
+                // type: (default|file)
+                // text: name
+                cond = [["data", 1], ["type", 1], ["text", 1]];
+                function comp(a, b) {
+                  if (a < b) return -1;
+                  if (a > b) return 1;
+                  return 0;
+                }
+
+                var re = 0;
+                cond.some(function(i) {
+                  re = comp(a[i[0]], b[i[0]]) * i[1];
+                  return re !== 0;
+                });
+                return re;
+              },
+              "contextmenu": {
+                "items": function($node) {
+                  var tree = $("#testTree").jstree(true);
+                  var now = moment().format('YYYYMMDDHHmmss');
+                  return {
+                    "Create": {
+                      "separator_before": false,
+                      "separator_after": false,
+                      "label": "Create",
+                      "submenu": {
+                        "create_folder" : {
+                          "separator_after" : false,
+                          "label" : "Folder",
+                          "action" : function (data) {
+                            var inst = $.jstree.reference(data.reference),
+                              obj = inst.get_node(data.reference);
+                            inst.create_node(
+                              obj, {
+                                type : "default",
+                                text :  "$" + now
+                              },
+                              "last",
+                              function (new_node) {
+                                setTimeout(function () {
+                                    inst.edit(new_node);
+                                  },
+                                  0);
+                              });
+                          }
+                        },
+                        "create_file" : {
+                          "separator_after" : false,
+                          "label" : "File",
+                          "action" : function (data) {
+                            var inst = $.jstree.reference(data.reference),
+                              obj = inst.get_node(data.reference);
+                            inst.create_node(
+                              obj, {
+                                type : "file",
+                                text :  "$" + now
+                              },
+                              "last",
+                              function (new_node) {
+                                setTimeout(function () {
+                                    inst.edit(new_node);
+                                  },
+                                  0);
+                              });
+                          }
+                        }
+                      },
+                    },
+                    "Rename": {
+                      "separator_before": false,
+                      "separator_after": false,
+                      "label": "Rename",
+                      "action": function(obj) {
+                        tree.edit($node);
+                      }
+                    },
+                    "Remove": {
+                      "separator_before": false,
+                      "separator_after": false,
+                      "label": "Remove",
+                      "action": function(obj) {
+                        tree.delete_node($node);
+                      }
+                    }
+                  };
+                }
+              },
+              // https://www.jstree.com/plugins/
+              "plugins": ["types", "wholerow", "unique", "dnd", "state", "sort", "contextmenu"]
+            });
+
+//            $('#testTree').on("changed.jstree", function (e, data) {
+//              console.log(data.event.type);
+//              console.log(data.instance.get_selected(true)[0].text);
+//              console.log(data.instance.get_node(data.selected[0]).text);
+//            });
+
+
+            $('#testTree').bind("dblclick.jstree", function(event) {
+              var dom = $(event.target).closest("li");
+              var tree = $('#testTree').jstree(true);
+              var node = tree.get_node(dom);
+
+              if (node.type === 'default') {
+                return; // folder の場合は何もしない
+              }
+
+              var text = node.text;
+              var id = node.id;
+              var title = id.replace(/[/ .]/g, '-');
+              var hash = '#jquery-ui-tabs-' + title;
+
+              if (editors[id]) {
+                // focus
+              } else {
+                // タブ生成
+                $("#tabs_center").tabs('add', hash, text);
+
+                var div = $(hash);
+                var div2 = $("<div class='tab-pane'></div>").appendTo(div);
+                var code = $('<textarea></textarea>').appendTo(div2);
+
+                // エディタ生成
+                var editor = createEditor(code[0], text);
+                editors[id] = {
+                  editor: editor,
+                  id: id,
+                  hash: hash,
+                  tab: node,
+                  name: text,
+                };
+
+                // ファイル取得 → 'update file'
+                socket.emit('get file', id);
+              }
+
+            });
+
+            // タブの順番並べ替え
+            // http://alphasis.info/2011/07/jquery-ui-tabs-sortable/
+            $(".droppable_tab").sortable({
+              axis: "x",
+              stop: function(event, ui) {
+
+                // タブの順番変更(sortable) が scrollabletabs と相性悪い
+                // ダミーのタブを追加/削除することで無理矢理に実現している
+                var $tabs = $(this).parent();
+                var $ul = $tabs.find('ul.ui-tabs-nav:first');
+                var $lis = $ul.find('li');
+                var $curSelectedTab = $ul.find('.ui-tabs-active').first();
+
+                $tabs.tabs('add', '#dummy-' + Date.now(), Date.now());
+                $tabs.tabs('remove', $lis.length);
+                $tabs.tabs({ active: $lis.index($curSelectedTab) })
+              }
+            });
+
+            myLayout = $('body').layout(stateResetSettings);
+
+          });
+
+
+          // しょっぱなのダミーエディタ
+          createEditor($("#code")[0])
+
+          const socket = io();
+          $('form').submit(() => {
+            socket.emit('chat message', $('#m').val());
+            $('#m').val('');
+            return false;
+          });
+          $('#cmd_step').on('click', () => {
+            socket.emit('chat message', 'step');
+          });
+          $('#cmd_cont').on('click', () => {
+            socket.emit('chat message', 'cont');
+          });
+          $('#cmd_run').on('click', () => {
+            socket.emit('chat message', 'run');
+          });
+          $('#cmd_stop').on('click', () => {
+            socket.emit('chat message', 'stop');
+          });
+          $('#cmd_compile').on('click', () => {
+            socket.emit('compile file');
+          });
+          $('#cmd_refresh').on('click', () => {
+            socket.emit('get dir');
+          });
+          socket.on('chat message', (msg) => {
+
+            const json = JSON.parse(msg);
+            const data = json.data || [];
+
+            if (json.command === 'where') {
+              const container = $('#stack');
+              // CurrentStepLine
+              const head = data[0];
+              if (head && editors[head.file]) {
+                editors[head.file].editor.stepLine(head);
+              }
+              container.empty();
+              json.output.forEach(msg => {
+                container.append($('<li>').text(msg));
+              });
+            }
+
+            if (json.command === 'locals') {
+              const container = $('#variables');
+              container.empty();
+              json.output.forEach(msg => {
+                container.append($('<li>').text(msg));
+              });
+            }
+
+            if (json.command === 'threads') {
+              const container = $('#threads');
+              container.empty();
+              json.output.forEach(msg => {
+                container.append($('<li>').text(msg));
+              });
+            }
+
+            {
+              const container = '#messages';
+              const li = $(container + ' > li');
+              if (li.length > 100)
+                li[0].remove();
+
+              const last = $(container + ' > li:last');
+              if (/(> )+$/.test(last.text()))
+                last.remove();
+
+              if (msg.length) {
+                const li = $('<li>');
+                $(container).append(li.text(msg));
+                if (msg.indexOf('> ') === 0) {
+                  li.addClass('command')
+                }
+              }
+
+              $(container).animate({ scrollTop: $(container)[0].scrollHeight }, 'fast');
+            }
+          });
+
+          // ファイル取得が完了した
+          socket.on('get file', (json) => {
+            const editor = editors[json.name];
+            if (editor) {
+              editor.editor.setValue(json.data);
+            }
+          });
+
+          // フォルダ構成取得が完了した
+          socket.on('get dir', (json) => {
+            const tree = $('#testTree').jstree(true);
+            // https://www.jstree.com/docs/json/
+            tree.settings.core.data = json.data.core;
+            //tree.redraw(true);
+            tree.refresh();
+
+            if (json.data.state) {
+              tree.set_state(json.data.state);
+//              const state = tree.get_state();
+//              console.log(state);
+            }
+          });
+
+          // フォルダ構成のステータス取得が完了した
+          socket.on('get dir state', (json) => {
+            const tree = $('#testTree').jstree(true);
+            tree.set_state(json.data);
+          });
+
+          socket.emit('get dir');
+          socket.emit('get dir state');
+
+        </script>
+
+    </body>
+</html>

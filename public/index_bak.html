@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Socket.IO chat</title>
+        <link href="/css/index.css" rel="stylesheet" type="text/css">
+
+
+
+    </head>
+    <body>
+        <ul id="messages"></ul>
+        <footer>
+            <form action="">
+                <table>
+                    <tr>
+                        <td style="width: 50%;"><ul id="threads"></ul></td>
+                        <td style="width: 50%;"><ul id="stack"></ul></td>
+                    </tr>
+                </table>
+                <table>
+                    <tr>
+                        <td style="width: 100%;">
+                            <input id="m" autocomplete="off" />
+                        </td>
+                        <td>
+                            <button>Send</button>
+                        </td>
+                        <td>
+                            <button id="cmd_step">Step</button>
+                        </td>
+                        <td>
+                            <button id="cmd_list">list</button>
+                        </td>
+                        <td>
+                            <button id="cmd_run">▶</button>
+                        </td>
+                        <td>
+                            <button id="cmd_stop">■</button>
+                        </td>
+                        <td>
+                            <button id="cmd_threads">threads</button>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </footer>
+
+        <script src="/socket.io/socket.io.js"></script>
+
+        <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+
+        <script>
+
+          const socket = io();
+          $('form').submit(() => {
+            socket.emit('chat message', $('#m').val());
+            $('#m').val('');
+            return false;
+          });
+          $('#cmd_step').on('click', () => {
+            socket.emit('chat message', 'step');
+          });
+          $('#cmd_list').on('click', () => {
+            socket.emit('chat message', 'list');
+          });
+          $('#cmd_run').on('click', () => {
+            socket.emit('chat message', 'run');
+          });
+          $('#cmd_stop').on('click', () => {
+            socket.emit('chat message', 'stop');
+          });
+          $('#cmd_threads').on('click', () => {
+            socket.emit('chat message', 'threads');
+          });
+          socket.on('chat message', (msg) => {
+//            const container = '#messages';
+            const container = '#threads';
+            const li = $(container + ' > li');
+            if (li.length > 100)
+              li[0].remove();
+            $(container).append($('<li>').text(msg));
+
+            console.log($(container)[0].scrollHeight);
+            $(container).animate({ scrollTop: $(container)[0].scrollHeight }, 'fast');
+          });
+        </script>
+
+    </body>
+</html>
