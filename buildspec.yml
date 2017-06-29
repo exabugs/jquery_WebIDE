@@ -13,9 +13,7 @@ phases:
       - echo IMAGE_REPO_NAME $IMAGE_REPO_NAME
       - echo IMAGE_TAG $IMAGE_TAG
       - echo AWS_ACCOUNT_ID $AWS_ACCOUNT_ID
-      - /usr/local/bin/docker-compose build
-      - aws ecr get-login --region $AWS_DEFAULT_REGION
-
+      - apt-get install docker
       - $(aws ecr get-login --region $AWS_DEFAULT_REGION)
   build:
     commands:
